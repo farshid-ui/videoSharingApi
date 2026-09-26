@@ -1,4 +1,3 @@
-from django.utils.autoreload import ensure_echo_on
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -47,4 +46,70 @@ class SubscriptionCreateView(APIView):
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
+        )
+
+class SubscriptionCancelView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            subscription = Subscription.objects.get(
+                pk=pk,
+                user=request.user,
+            )
+
+        except Subscription.DoesNotExist:
+            return Response(
+                {'detail': 'Subscription not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if subscription.status == 'inactive':
+            return Response(
+                {'detail': 'Subscription is already inactive'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        subscription.status = 'inactive'
+        subscription.save(update_fields=['status'])
+
+        return Response(
+            {
+                'message': 'Subscription cancelled successfully',
+                'subscription': SubscriptionSerializer(subscription).data,
+            },
+        )
+
+class SubscriptionRenewView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            subscription = Subscription.objects.get(
+                pk=pk,
+                user=request.user,
+            )
+
+        except Subscription.DoesNotExist:
+            return Response(
+                {'detail': 'Subscription not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if subscription.status != 'active':
+            return Response(
+                {'detail': 'Only active subscriptions can be renewed'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        subscription.end_date = subscription.end_date + timedelta(
+            days=subscription.plan.duration_days
+        )
+
+        subscription.save(update_fields=['end_date'])
+
+        return Response(
+            SubscriptionSerializer(subscription).data,
         )
