@@ -64,6 +64,15 @@ class Rating(models.Model):
     def __str__(self):
         return f'{self.video.title} - {self.score}'
 
+    class Meta:
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'video'],
+                name='unique_user_video_rating',
+            )
+        ]
+
 class Comment(models.Model):
     user = models.ForeignKey(
         'user.User',

@@ -44,3 +44,41 @@ class WatchHistorySerializer(serializers.ModelSerializer):
             'id',
             'watched_at',
         ]
+
+class RatingSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = Rating
+
+        fields = [
+            'id',
+            'video',
+            'score',
+            'created_at',
+        ]
+
+        read_only_fields = [
+            'id',
+            'created_at',
+        ]
+
+class CommentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+
+        model = Comment
+
+        fields = [
+            'id',
+            'video',
+            'text',
+            'created_at',
+            'updated_at',
+        ]
+
+        read_only_fields = [
+            'id',
+            'created_at',
+            'updated_at',
+        ]
