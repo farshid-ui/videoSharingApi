@@ -3,7 +3,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
-from .serializers import RegisterSerializer
+from django.contrib.auth import authenticate, login
+
+from .serializers import RegisterSerializer, LoginSerializer
 
 class ProfileView(APIView):
 
@@ -35,3 +37,34 @@ class RegisterView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LoginView(APIView):
+
+    permission_classes = []
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+
+        if serializer.is_valid():
+            username = serializer.validated_data['username']
+            password = serializer.validated_data['password']
+
+            user = authenticate(username=username, password=password)
+
+            if user is None:
+                return Response(
+                    {'detail': 'Invalid username or password.'},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            login(request, user)
+
+            return Response({
+                'message': 'Login successful.',
+                'username': username,
+            })
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
